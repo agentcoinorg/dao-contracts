@@ -1,6 +1,6 @@
 https://forum.polywrap.io/t/important-proposal-critical-steps-for-deployment-of-agent-token/482
 
-TODOs:
+TODOs (Deadline November 13th):
 * Create AGENT token ready to deploy on mainnet (Name = Agentcoin Token; Ticker = AGENT; Decimals = 18; Supply = 1 Billion)
   * AGENT token contract should be upgradable and owned by the DAO's address.
   * AGENT token should be ERC20Snapshot
