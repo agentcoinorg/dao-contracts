@@ -1,0 +1,13 @@
+{
+  "name": "allocation",
+  "version": "1.0.0",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "test": "node generate-test-data.js && node generate-allocations.js test",
+    "run": "node generate-allocations.js prod"
+  },
+  "dependencies": {
+    "ethers": "^6.13.4"
+  }
+}
