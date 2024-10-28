@@ -1,3 +1,43 @@
+# Agentcoin Token
+## Token Details
+- Name: Agentcoin Token
+- Symbol: AGENT
+- Decimals: 18
+- Total Supply: 1,000,000,000 AGENT
+
+Agentcoin Token is an ERC20 token with snapshot capabilities. The token is upgradable and owned by the DAO's address.
+
+## Test deployment
+
+- Agentcoin Token contract address: 0xCa7d0393aD19C05cbAeC7c6f5505b7B3FDea35Bc (Proxy)
+- Agentcoin Token implementation address: 0xfD70ef2AEdFF0112A5bC78502A8F57564626B292
+- Owner and Holder address: 0xF6fB693BB196AE5f5dEB98D502c52B8C31025f5D (Gnosis Safe)
+
+## Getting started
+### Dependencies
+- Node.js
+- Yarn
+- Foundry
+
+To install Foundry follow the steps at https://book.getfoundry.sh/getting-started/installation
+
+## Deployment Process
+### Sepolia
+
+#### Instructions
+Open the terminal in the `./contracts` directory.
+Create a `.env` file with the following the example at `.env.example`.
+To deploy on sepolia run the `./deploy/sepolia.sh` script.
+The script can be used with either a forge account or a private key.
+
+- To deploy with the forge account, before running the script, set the `FORGE_ACCOUNT` environment variable to the forge account address.
+- To deploy with a private key, run the `./deploy/sepolia.sh` script with the `pk` argument like so:
+```bash
+./deploy/sepolia.sh pk
+```
+The script will prompt you to enter the private key.
+
+## Notes and TODOs
 https://forum.polywrap.io/t/important-proposal-critical-steps-for-deployment-of-agent-token/482
 
 TODOs (Deadline November 13th):
