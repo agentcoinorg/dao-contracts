@@ -80,6 +80,7 @@ TODOs (Deadline November 13th):
   * AGENT token contract should be upgradable and owned by the DAO's address.
   * AGENT token should be ERC20Snapshot
   * Upgradeability should be able to be turned off completely in the future
+* Deployment process should be detailed in the README for anyone to follow
 * Allocation is as follows:
   * 10,000 AGENT for 1 WRAP-IOU for all purchasers
   * 10,000 AGENT for 1 WRAP-IOU for all contributors who've voted in more than one proposal
@@ -88,11 +89,12 @@ TODOs (Deadline November 13th):
 * Designation of New Addresses - support a "claimAddress.json" file which maps an old address to a new address.
 * All allocated AGENT (except treasury allocation) will be put into vesting contracts. These vesting contracts should have a 12 month cliff and 24 month vesting thereafter. 1/3 available for withdrawal after 12 months.
 * Update new signers + make sure they have good opsec
+* Need to setup revokable vesting contracts for contributors who do not have WRAP-IOU yet (Ex: Ofir, Martin)
+* Test using more than one vesting contract with snapshot
 * Setup Snapshot X
   * SnapshotX parameters: 7.5% quorum, 0 vote delay, 3 day min voting period, 7 day max voting period
   * Able to vote with AGENT and locked AGENT
   * Add snapshotX to multi-sig
-* Deployment process should be detailed in the README for anyone to follow
 * We need to document how SnapshotX voters can create specific types of transactions
   * 1. creating a new token package for a new contributor
   * 2. revoking a token package for a contributor that has left
