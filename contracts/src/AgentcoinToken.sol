@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import {ERC20VotesUpgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20VotesUpgradeable.sol";
+import {ERC20VotesUpgradeable} from
+    "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20VotesUpgradeable.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
@@ -17,7 +18,7 @@ contract AgentcoinToken is ERC20VotesUpgradeable, OwnableUpgradeable, UUPSUpgrad
         _disableInitializers();
     }
 
-    function initialize(address owner, address recipient) initializer public {
+    function initialize(address owner, address recipient) public initializer {
         string memory name = "Agentcoin Token";
         string memory symbol = "AGENT";
 
@@ -29,5 +30,5 @@ contract AgentcoinToken is ERC20VotesUpgradeable, OwnableUpgradeable, UUPSUpgrad
         _mint(recipient, MAX_TOTAL_SUPPLY);
     }
 
-    function _authorizeUpgrade(address newImplementation) internal override onlyOwner() {}
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 }

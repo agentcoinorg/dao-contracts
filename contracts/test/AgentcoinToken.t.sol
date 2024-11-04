@@ -17,12 +17,7 @@ contract AgentcoinTokenTest is Test {
     function setUp() public {
         DeployAgentcoinTokenScript script = new DeployAgentcoinTokenScript();
 
-        token = script.deploy(
-            HelperConfig.AgentcoinTokenConfig({
-                owner: owner,
-                recipient: recipient
-            })
-        );
+        token = script.deploy(HelperConfig.AgentcoinTokenConfig({owner: owner, recipient: recipient}));
     }
 
     function test_SupplyShouldBe1Billion() public view {
@@ -61,7 +56,7 @@ contract AgentcoinTokenTest is Test {
         address newImplementation = address(new AgentcoinToken());
 
         vm.startPrank(makeAddr("nonOwner"));
-    
+
         vm.expectPartialRevert(OwnableUpgradeable.OwnableUnauthorizedAccount.selector);
         token.upgradeToAndCall(newImplementation, "");
 
@@ -75,7 +70,7 @@ contract AgentcoinTokenTest is Test {
 
         token.upgradeToAndCall(address(newImplementation), "");
 
-        uint result = AgentcoinTokenV2Mock(address(token)).testFunction();
+        uint256 result = AgentcoinTokenV2Mock(address(token)).testFunction();
 
         assertEq(result, 1);
 
@@ -108,12 +103,12 @@ contract AgentcoinTokenTest is Test {
         vm.startPrank(owner);
 
         token.transferOwnership(makeAddr("newOwner"));
-       
+
         address newImplementation = address(new AgentcoinToken());
 
         vm.expectPartialRevert(OwnableUpgradeable.OwnableUnauthorizedAccount.selector);
         token.upgradeToAndCall(newImplementation, "");
-       
+
         vm.stopPrank();
 
         vm.startPrank(makeAddr("newOwner"));

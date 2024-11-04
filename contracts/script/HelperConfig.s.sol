@@ -36,9 +36,7 @@ contract HelperConfig is Constants, Script {
     }
 
     function getSepoliaConfig() private view returns (AgentcoinTokenConfig memory) {
-        return AgentcoinTokenConfig({
-            owner: vm.envAddress("SEPOLIA_OWNER"),
-            recipient: vm.envAddress("SEPOLIA_RECIPIENT")
-        });
+        return
+            AgentcoinTokenConfig({owner: vm.envAddress("SEPOLIA_OWNER"), recipient: vm.envAddress("SEPOLIA_RECIPIENT")});
     }
 }
