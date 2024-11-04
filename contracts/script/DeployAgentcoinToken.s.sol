@@ -15,14 +15,14 @@ contract DeployAgentcoinTokenScript is Script {
         deploy(helper.getConfig());
     }
 
-    function deploy(
-        HelperConfig.AgentcoinTokenConfig memory config
-    ) public returns (AgentcoinToken) {
+    function deploy(HelperConfig.AgentcoinTokenConfig memory config) public returns (AgentcoinToken) {
         vm.startBroadcast();
 
         AgentcoinToken implementation = new AgentcoinToken();
 
-        ERC1967Proxy proxy = new ERC1967Proxy(address(implementation), abi.encodeCall(AgentcoinToken.initialize, (config.owner, config.recipient)));
+        ERC1967Proxy proxy = new ERC1967Proxy(
+            address(implementation), abi.encodeCall(AgentcoinToken.initialize, (config.owner, config.recipient))
+        );
 
         vm.stopBroadcast();
 
