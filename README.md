@@ -71,6 +71,3 @@ To generate production allocations, run the following command:
 yarn prod
 ```
 This will generate the production allocations in the `./allocations/prod` directory.
-
-## Notes and TODOs
-https://forum.polywrap.io/t/important-proposal-critical-steps-for-deployment-of-agent-token/482
