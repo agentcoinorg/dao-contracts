@@ -9,16 +9,16 @@ abstract contract Constants {
 }
 
 contract HelperConfig is Constants, Script {
-    struct AgentcoinTokenConfig {
+    struct AgentcoinTvTokenConfig {
         address owner;
         address recipient;
     }
 
-    function getConfig() public view returns (AgentcoinTokenConfig memory) {
+    function getConfig() public view returns (AgentcoinTvTokenConfig memory) {
         return getConfigByChainId(block.chainid);
     }
 
-    function getConfigByChainId(uint256 chainId) private view returns (AgentcoinTokenConfig memory) {
+    function getConfigByChainId(uint256 chainId) private view returns (AgentcoinTvTokenConfig memory) {
         if (chainId == CHAIN_ID_ETHEREUM) {
             return getEthereumConfig();
         } else if (chainId == CHAIN_ID_SEPOLIA) {
@@ -28,15 +28,15 @@ contract HelperConfig is Constants, Script {
         }
     }
 
-    function getEthereumConfig() private view returns (AgentcoinTokenConfig memory) {
-        return AgentcoinTokenConfig({
+    function getEthereumConfig() private view returns (AgentcoinTvTokenConfig memory) {
+        return AgentcoinTvTokenConfig({
             owner: vm.envAddress("ETHEREUM_OWNER"),
             recipient: vm.envAddress("ETHEREUM_RECIPIENT")
         });
     }
 
-    function getSepoliaConfig() private view returns (AgentcoinTokenConfig memory) {
+    function getSepoliaConfig() private view returns (AgentcoinTvTokenConfig memory) {
         return
-            AgentcoinTokenConfig({owner: vm.envAddress("SEPOLIA_OWNER"), recipient: vm.envAddress("SEPOLIA_RECIPIENT")});
+            AgentcoinTvTokenConfig({owner: vm.envAddress("SEPOLIA_OWNER"), recipient: vm.envAddress("SEPOLIA_RECIPIENT")});
     }
 }

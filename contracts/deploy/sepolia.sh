@@ -1,6 +1,6 @@
 if [[ $1 = "pk" ]]; then
     export $(cat .env | xargs) && \
-    forge script ./script/DeployAgentcoinToken.s.sol \
+    forge script ./script/DeployAgentcoinTvToken.s.sol \
         --rpc-url $SEPOLIA_RPC_URL \
         --broadcast \
         -g 200 \
@@ -12,7 +12,7 @@ if [[ $1 = "pk" ]]; then
         --slow
 else
     export $(cat .env | xargs) && \
-    forge script ./script/DeployAgentcoinToken.s.sol \
+    forge script ./script/DeployAgentcoinTvToken.s.sol \
         --rpc-url $SEPOLIA_RPC_URL \
         --broadcast \
         -g 200 \

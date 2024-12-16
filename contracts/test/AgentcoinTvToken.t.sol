@@ -2,22 +2,23 @@
 pragma solidity ^0.8.28;
 
 import {Test, console} from "forge-std/Test.sol";
-import {AgentcoinToken} from "../src/AgentcoinToken.sol";
-import {DeployAgentcoinTokenScript} from "../script/DeployAgentcoinToken.s.sol";
-import {AgentcoinTokenV2Mock} from "./mocks/AgentcoinTokenV2Mock.sol";
+import {AgentcoinTvToken} from "../src/AgentcoinTvToken.sol";
+import {DeployAgentcoinTvTokenScript} from "../script/DeployAgentcoinTvToken.s.sol";
+import {AgentcoinTvTokenV2Mock} from "./mocks/AgentcoinTvTokenV2Mock.sol";
+import {AgentcoinTvTokenV3Mock} from "./mocks/AgentcoinTvTokenV3Mock.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import {HelperConfig} from "../script/HelperConfig.s.sol";
 
-contract AgentcoinTokenTest is Test {
-    AgentcoinToken private token;
+contract AgentcoinTvTokenTest is Test {
+    AgentcoinTvToken private token;
     address private owner = makeAddr("owner");
     address private recipient = makeAddr("recipient");
 
     function setUp() public {
-        DeployAgentcoinTokenScript script = new DeployAgentcoinTokenScript();
+        DeployAgentcoinTvTokenScript script = new DeployAgentcoinTvTokenScript();
 
-        token = script.deploy(HelperConfig.AgentcoinTokenConfig({owner: owner, recipient: recipient}));
+        token = script.deploy(HelperConfig.AgentcoinTvTokenConfig({owner: owner, recipient: recipient}));
     }
 
     function test_SupplyShouldBe1Billion() public view {
@@ -35,7 +36,7 @@ contract AgentcoinTokenTest is Test {
     function test_OwnerCanUpgrade() public {
         vm.startPrank(owner);
 
-        token.upgradeToAndCall(address(new AgentcoinToken()), "");
+        token.upgradeToAndCall(address(new AgentcoinTvToken()), "");
 
         vm.stopPrank();
     }
@@ -53,7 +54,7 @@ contract AgentcoinTokenTest is Test {
     }
 
     function test_NonOwnerCannotUpgrade() public {
-        address newImplementation = address(new AgentcoinToken());
+        address newImplementation = address(new AgentcoinTvToken());
 
         vm.startPrank(makeAddr("nonOwner"));
 
@@ -64,13 +65,13 @@ contract AgentcoinTokenTest is Test {
     }
 
     function test_NewImplementationWorks() public {
-        AgentcoinTokenV2Mock newImplementation = new AgentcoinTokenV2Mock();
+        AgentcoinTvTokenV2Mock newImplementation = new AgentcoinTvTokenV2Mock();
 
         vm.startPrank(owner);
 
         token.upgradeToAndCall(address(newImplementation), "");
 
-        uint256 result = AgentcoinTokenV2Mock(address(token)).testFunction();
+        uint256 result = AgentcoinTvTokenV2Mock(address(token)).testFunction();
 
         assertEq(result, 1);
 
@@ -80,7 +81,7 @@ contract AgentcoinTokenTest is Test {
     }
 
     function test_CannotCallInitializerInImplementation() public {
-        AgentcoinTokenV2Mock newImplementation = new AgentcoinTokenV2Mock();
+        AgentcoinTvTokenV2Mock newImplementation = new AgentcoinTvTokenV2Mock();
 
         vm.expectRevert(Initializable.InvalidInitialization.selector);
         newImplementation.initialize(owner, recipient);
@@ -91,7 +92,7 @@ contract AgentcoinTokenTest is Test {
 
         token.renounceOwnership();
 
-        address newImplementation = address(new AgentcoinToken());
+        address newImplementation = address(new AgentcoinTvToken());
 
         vm.expectPartialRevert(OwnableUpgradeable.OwnableUnauthorizedAccount.selector);
         token.upgradeToAndCall(newImplementation, "");
@@ -104,7 +105,7 @@ contract AgentcoinTokenTest is Test {
 
         token.transferOwnership(makeAddr("newOwner"));
 
-        address newImplementation = address(new AgentcoinToken());
+        address newImplementation = address(new AgentcoinTvToken());
 
         vm.expectPartialRevert(OwnableUpgradeable.OwnableUnauthorizedAccount.selector);
         token.upgradeToAndCall(newImplementation, "");
@@ -125,6 +126,17 @@ contract AgentcoinTokenTest is Test {
 
         assertEq(token.balanceOf(makeAddr("new-recipient")), 100);
 
+        vm.stopPrank();
+    }
+
+    function test_canUpgradeNameAndSymbol() public {
+        vm.startPrank(owner);
+        assertEq(token.name(), "Agentcoin TV Token");
+        assertEq(token.symbol(), "AITV");
+
+        token.upgradeToAndCall(address(new AgentcoinTvTokenV3Mock()), "");
+        assertEq(token.name(), "Agentcoin TV Token V3");
+        assertEq(token.symbol(), "AITVV3");
         vm.stopPrank();
     }
 }

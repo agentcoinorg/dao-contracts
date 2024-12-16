@@ -3,10 +3,10 @@ pragma solidity 0.8.28;
 
 import {Script, console} from "forge-std/Script.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-import {AgentcoinToken} from "../src/AgentcoinToken.sol";
+import {AgentcoinTvToken} from "../src/AgentcoinTvToken.sol";
 import {HelperConfig} from "./HelperConfig.s.sol";
 
-contract DeployAgentcoinTokenScript is Script {
+contract DeployAgentcoinTvTokenScript is Script {
     function setUp() public {}
 
     function run() public {
@@ -15,17 +15,17 @@ contract DeployAgentcoinTokenScript is Script {
         deploy(helper.getConfig());
     }
 
-    function deploy(HelperConfig.AgentcoinTokenConfig memory config) public returns (AgentcoinToken) {
+    function deploy(HelperConfig.AgentcoinTvTokenConfig memory config) public returns (AgentcoinTvToken) {
         vm.startBroadcast();
 
-        AgentcoinToken implementation = new AgentcoinToken();
+        AgentcoinTvToken implementation = new AgentcoinTvToken();
 
         ERC1967Proxy proxy = new ERC1967Proxy(
-            address(implementation), abi.encodeCall(AgentcoinToken.initialize, (config.owner, config.recipient))
+            address(implementation), abi.encodeCall(AgentcoinTvToken.initialize, (config.owner, config.recipient))
         );
 
         vm.stopBroadcast();
 
-        return AgentcoinToken(address(proxy));
+        return AgentcoinTvToken(address(proxy));
     }
 }

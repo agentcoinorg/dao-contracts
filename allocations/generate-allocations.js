@@ -86,7 +86,7 @@ async function main() {
   fs.writeFileSync(`./${mode}/allocations.csv`, allocations);
   
   const totalAmount = all.reduce((acc, x) => acc + x.amount, 0);
-  console.log(`Total AGENT amount: ${totalAmount}`);
+  console.log(`Total AITV amount: ${totalAmount}`);
 }
 
 main().then(() => process.exit(0));
