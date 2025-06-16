@@ -1,16 +1,16 @@
-# Agentcoin Token
+# AITV Token
 ## Token Details
-- Name: Agentcoin TV Token
+- Name: AITV
 - Symbol: AITV
 - Decimals: 18
 - Total Supply: 1,000,000,000 AITV
 
-Agentcoin TV Token is an ERC20 token with snapshot capabilities. The token is upgradable and owned by the DAO's address.
+AITV Token is an ERC20 token with snapshot capabilities. The token is upgradable and owned by the DAO's address.
 
 ## Test deployment
 
-- Agentcoin TV Token contract address: 0xCa7d0393aD19C05cbAeC7c6f5505b7B3FDea35Bc (Proxy)
-- Agentcoin TV Token implementation address: 0xfD70ef2AEdFF0112A5bC78502A8F57564626B292
+- AITV Token contract address: 0x04E69Ff14A86E1ca9a155A8563E95887973EE175 (Proxy)
+- AITV Token implementation address: 0x5bcdE98A19D7dCa9c401b83D5450176e3459b698
 - Owner and Holder address: 0xF6fB693BB196AE5f5dEB98D502c52B8C31025f5D (Gnosis Safe)
 
 ## Getting started
@@ -40,7 +40,7 @@ The script will prompt you to enter the private key.
 ## Allocations
 - 10,000 AITV for 1 WRAP-IOU for all purchasers
 - 10,000 AITV for 1 WRAP-IOU for all contributors who've voted in more than one proposal
-- Remaining supply (1B total supply) minted to the agentcoin treasury address (mainnet: 0x8c3FA50473065f1D90f186cA8ba1Aa76Aee409Bb)
+- Remaining supply (1B total supply) minted to the aitv treasury address (mainnet: 0x8c3FA50473065f1D90f186cA8ba1Aa76Aee409Bb)
 - All allocated AITV (except treasury allocation) will be put into vesting contracts. These vesting contracts should have a 12 month cliff and 24 month vesting thereafter. 1/3 available for withdrawal after 12 months.
 
 Allocation scripts are in the `./allocations` directory.
