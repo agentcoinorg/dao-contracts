@@ -7,10 +7,15 @@
 
 AITV Token is an ERC20 token with snapshot capabilities. The token is upgradable and owned by the DAO's address.
 
-## Test deployment
-
+# Ethereum (mainnet) deployment
 - AITV Token contract address: 0x04E69Ff14A86E1ca9a155A8563E95887973EE175 (Proxy)
 - AITV Token implementation address: 0x5bcdE98A19D7dCa9c401b83D5450176e3459b698
+- Owner address: 0xeff5440746A7B362273ca7CDDB9CD5783C71737D (Gnosis Safe)
+
+## Test deployment
+
+- Agentcoin TV Token contract address: 0xCa7d0393aD19C05cbAeC7c6f5505b7B3FDea35Bc (Proxy)
+- Agentcoin TV Token implementation address: 0xfD70ef2AEdFF0112A5bC78502A8F57564626B292
 - Owner and Holder address: 0xF6fB693BB196AE5f5dEB98D502c52B8C31025f5D (Gnosis Safe)
 
 ## Getting started
