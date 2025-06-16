@@ -16,6 +16,11 @@ contract MainnetNameUpgradeTest is Test {
     function test_canUpgradeNameAndSymbol() public {
         assertEq(token.name(), "Agentcoin TV Token");
         assertEq(token.symbol(), "AITV");
+        
+        // The current (and only) 3 holders of the token
+        assertEq(token.balanceOf(0x8c3FA50473065f1D90f186cA8ba1Aa76Aee409Bb), 633_051_592.1986 * 1e18);
+        assertEq(token.balanceOf(0x73cD8626b3cD47B009E68380720CFE6679A3Ec3D), 338_370_251.2044 * 1e18);
+        assertEq(token.balanceOf(0x1bb64AF7FE05fc69c740609267d2AbE3e119Ef82), 28_578_156.597 * 1e18);
 
         vm.prank(makeAddr("deployer"));
         address newAddress = address(new AITVToken());
@@ -25,5 +30,9 @@ contract MainnetNameUpgradeTest is Test {
         assertEq(token.name(), "AITV");
         assertEq(token.symbol(), "AITV");
         vm.stopPrank();
+
+        assertEq(token.balanceOf(0x8c3FA50473065f1D90f186cA8ba1Aa76Aee409Bb), 633_051_592.1986 * 1e18);
+        assertEq(token.balanceOf(0x73cD8626b3cD47B009E68380720CFE6679A3Ec3D), 338_370_251.2044 * 1e18);
+        assertEq(token.balanceOf(0x1bb64AF7FE05fc69c740609267d2AbE3e119Ef82), 28_578_156.597 * 1e18);
     }
 }
