@@ -7,8 +7,6 @@ import {AITVToken} from "../src/AITVToken.sol";
 
 contract MainnetNameUpgradeTest is Test {
     AgentcoinTvToken private token;
-    address private owner = makeAddr("owner");
-    address private recipient = makeAddr("recipient");
 
     function setUp() public {
         vm.createSelectFork(vm.envString("ETHEREUM_RPC_URL"));
