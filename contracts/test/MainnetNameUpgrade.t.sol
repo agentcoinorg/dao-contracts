@@ -9,7 +9,7 @@ contract MainnetNameUpgradeTest is Test {
     AgentcoinTvToken private token;
 
     function setUp() public {
-        vm.createSelectFork(vm.envString("ETHEREUM_RPC_URL"));
+        vm.createSelectFork(vm.envString("ETHEREUM_RPC_URL"), 22718178);
         token = AgentcoinTvToken(payable(vm.envAddress("AITV_TOKEN_ADDRESS")));
     }
 
