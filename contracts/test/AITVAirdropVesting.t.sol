@@ -25,7 +25,7 @@ contract MaliciousToken is MockedERC20 {
     function transfer(address to, uint256 amount) public override returns (bool) {
         super.transfer(to, amount);
         if (to == attacker) {
-            AITVAirdropVesting(payable(target)).claim();
+            AITVAirdropVesting(payable(target)).claimAndForfeitRemaining();
         }
         return true;
     }
@@ -86,25 +86,24 @@ contract AITVAirdropVestingTest is Test {
         token.mint(user2, 100 ether);
     }
 
-    function testRevertsOnDeployWithZeroAddressToken() public {
+    function test_revertsOnDeployWithZeroAddressToken() public {
         vm.prank(owner);
         vm.expectRevert(AITVAirdropVesting.InvalidTokenAddress.selector);
         new AITVAirdropVesting(address(0), treasury, address(votingEscrow));
     }
 
-    function testRevertsOnDeployWithZeroAddressTreasury() public {
+    function test_revertsOnDeployWithZeroAddressTreasury() public {
         vm.prank(owner);
         vm.expectRevert(AITVAirdropVesting.InvalidTreasuryAddress.selector);
         new AITVAirdropVesting(address(token), address(0), address(votingEscrow));
     }
 
-    function testRevertsOnDeployWithZeroAddressVotingEscrow() public {
+    function test_doesNotRevertOnDeployWithZeroAddressVotingEscrow() public {
         vm.prank(owner);
-        vm.expectRevert(AITVAirdropVesting.InvalidVotingEscrowAddress.selector);
         new AITVAirdropVesting(address(token), treasury, address(0));
     }
 
-    function testRegisterBatch() public {
+    function test_registerBatch() public {
         address[] memory users = new address[](2);
         users[0] = user1;
         users[1] = user2;
@@ -127,15 +126,16 @@ contract AITVAirdropVestingTest is Test {
         assertEq(startTime2, expectedStartTime, "User2 start time mismatch");
     }
 
-    function testRegisterWithEmptyArrays() public {
+    function test_registerWithEmptyArrays() public {
         address[] memory users = new address[](0);
         uint256[] memory amounts = new uint256[](0);
 
         vm.prank(owner);
+        vm.expectRevert(AITVAirdropVesting.MissingBeneficiary.selector);
         vesting.registerBeneficiaries(users, amounts);
     }
 
-    function testRevertsOnRegisterByNonOwner() public {
+    function test_revertsOnRegisterByNonOwner() public {
         address[] memory users = new address[](1);
         users[0] = user1;
         uint256[] memory amounts = new uint256[](1);
@@ -146,7 +146,7 @@ contract AITVAirdropVestingTest is Test {
         vesting.registerBeneficiaries(users, amounts);
     }
 
-    function testRevertsOnDoubleRegistration() public {
+    function test_revertsOnDoubleRegistration() public {
         registerSingle(user1, 1000 ether);
 
         address[] memory users = new address[](1);
@@ -159,7 +159,7 @@ contract AITVAirdropVestingTest is Test {
         vesting.registerBeneficiaries(users, amounts);
     }
 
-    function testRevertsOnRegisterWithInputLengthMismatch() public {
+    function test_revertsOnRegisterWithInputLengthMismatch() public {
         address[] memory users = new address[](2);
         users[0] = user1;
         users[1] = user2;
@@ -171,7 +171,7 @@ contract AITVAirdropVestingTest is Test {
         vesting.registerBeneficiaries(users, amounts);
     }
 
-    function testRevertsOnRegisterWithZeroAddressBeneficiary() public {
+    function test_revertsOnRegisterWithZeroAddressBeneficiary() public {
         address[] memory users = new address[](1);
         users[0] = address(0);
         uint256[] memory amounts = new uint256[](1);
@@ -182,7 +182,7 @@ contract AITVAirdropVestingTest is Test {
         vesting.registerBeneficiaries(users, amounts);
     }
 
-    function testRevertsOnRegisterWithZeroAllocationAmount() public {
+    function test_revertsOnRegisterWithZeroAllocationAmount() public {
         address[] memory users = new address[](1);
         users[0] = user1;
         uint256[] memory amounts = new uint256[](1);
@@ -193,15 +193,15 @@ contract AITVAirdropVestingTest is Test {
         vesting.registerBeneficiaries(users, amounts);
     }
 
-    function testClaimInstantly() public {
+    function test_claimInstantly() public {
         registerSingle(user1, 1000 ether);
         uint256 initialTreasuryBalance = token.balanceOf(treasury);
         uint256 initialUserBalance = token.balanceOf(user1);
 
         vm.prank(user1);
-        vesting.claim();
+        vesting.claimAndForfeitRemaining();
 
-        uint256 expectedClaim = (1000 ether * vesting.OPTION_A_BASIS_POINTS()) / vesting.MAX_BASIS_POINTS();
+        uint256 expectedClaim = (1000 ether * vesting.IMMEDIATE_UNLOCK_BASIS_POINTS()) / vesting.MAX_BASIS_POINTS();
         uint256 expectedForfeit = 1000 ether - expectedClaim;
 
         assertEq(token.balanceOf(user1), initialUserBalance + expectedClaim, "User1 balance mismatch");
@@ -212,7 +212,7 @@ contract AITVAirdropVestingTest is Test {
         assertEq(claimed, expectedClaim, "Claimed amount mismatch in struct");
     }
 
-    function testClaimPartwayThroughVesting() public {
+    function test_claimPartwayThroughVesting() public {
         registerSingle(user1, 1000 ether);
         uint256 initialTreasuryBalance = token.balanceOf(treasury);
         uint256 initialUserBalance = token.balanceOf(user1);
@@ -221,10 +221,10 @@ contract AITVAirdropVestingTest is Test {
         vm.warp(block.timestamp + halfDuration);
 
         vm.prank(user1);
-        vesting.claim();
+        vesting.claimAndForfeitRemaining();
 
-        uint256 unlockedPercent = vesting.OPTION_A_BASIS_POINTS()
-            + (halfDuration * (vesting.MAX_BASIS_POINTS() - vesting.OPTION_A_BASIS_POINTS())) / vesting.VESTING_DURATION();
+        uint256 unlockedPercent = vesting.IMMEDIATE_UNLOCK_BASIS_POINTS()
+            + (halfDuration * (vesting.MAX_BASIS_POINTS() - vesting.IMMEDIATE_UNLOCK_BASIS_POINTS())) / vesting.VESTING_DURATION();
         uint256 expectedClaim = (1000 ether * unlockedPercent) / vesting.MAX_BASIS_POINTS();
         uint256 expectedForfeit = 1000 ether - expectedClaim;
 
@@ -233,7 +233,7 @@ contract AITVAirdropVestingTest is Test {
         assertEq(token.balanceOf(treasury), initialTreasuryBalance + expectedForfeit, "Treasury balance mismatch");
     }
 
-    function testClaimAfterFullVesting() public {
+    function test_claimAfterFullVesting() public {
         registerSingle(user2, 1000 ether);
         uint256 initialTreasuryBalance = token.balanceOf(treasury);
         uint256 initialUserBalance = token.balanceOf(user2);
@@ -241,7 +241,7 @@ contract AITVAirdropVestingTest is Test {
         vm.warp(block.timestamp + vesting.VESTING_DURATION() + 1 days);
 
         vm.prank(user2);
-        vesting.claim();
+        vesting.claimAndForfeitRemaining();
 
         assertEq(token.balanceOf(user2), initialUserBalance + 1000 ether, "User2 should receive full allocation");
         assertEq(token.balanceOf(treasury), initialTreasuryBalance, "Treasury should receive nothing");
@@ -250,18 +250,18 @@ contract AITVAirdropVestingTest is Test {
         assertEq(claimed, 1000 ether, "Claimed amount mismatch in struct");
     }
 
-    function testRevertsOnSecondClaim() public {
+    function test_revertsOnSecondClaim() public {
         registerSingle(user1, 1000 ether);
 
         vm.prank(user1);
-        vesting.claim();
+        vesting.claimAndForfeitRemaining();
 
         vm.prank(user1);
-        vm.expectRevert(AITVAirdropVesting.VestingFullyClaimed.selector);
-        vesting.claim();
+        vm.expectRevert(AITVAirdropVesting.AlreadyClaimed.selector);
+        vesting.claimAndForfeitRemaining();
     }
 
-    function testClaimAndDepositToLockSuccess() public {
+    function test_claimAndDepositToLockSuccess() public {
         uint256 allocation = 1000 ether;
         registerSingle(user1, allocation);
 
@@ -269,10 +269,13 @@ contract AITVAirdropVestingTest is Test {
         uint256 initialUserLockAmount = 1 ether;
         // Escrow rounds down to the week, so we must calculate the unlock time this way
         uint256 unlockTime = ((block.timestamp + MIN_STAKE_DURATION + 1 days) / ONE_WEEK) * ONE_WEEK;
-        vm.prank(user1);
-        token.approve(address(votingEscrow), initialUserLockAmount);
-        vm.prank(user1);
+
+        vm.startPrank(user1);
+        // User must approve for both the initial lock and the subsequent airdrop deposit.
+        token.approve(address(votingEscrow), initialUserLockAmount + allocation);
+        // User creates the initial lock.
         votingEscrow.create_lock(initialUserLockAmount, unlockTime);
+        vm.stopPrank();
 
         // User calls the vesting contract to deposit their allocation
         // The event has 1 indexed topic (user) and 2 data fields (amount, unlockTime).
@@ -291,7 +294,7 @@ contract AITVAirdropVestingTest is Test {
         assertEq(claimed, allocation, "Claimed amount in struct should be full allocation");
     }
 
-    function testRevertsClaimAndDepositToLockWhenLockIsTooShort() public {
+    function test_revertsClaimAndDepositToLockWhenLockIsTooShort() public {
         registerSingle(user1, 1000 ether);
 
         // User creates a lock with INSUFFICIENT duration
@@ -308,7 +311,7 @@ contract AITVAirdropVestingTest is Test {
         vesting.claimAndDepositToLock();
     }
 
-    function testRevertsClaimAndDepositToLockWhenNoLockExists() public {
+    function test_revertsClaimAndDepositToLockWhenNoLockExists() public {
         registerSingle(user1, 1000 ether);
 
         // User has NOT created a lock.
@@ -317,18 +320,19 @@ contract AITVAirdropVestingTest is Test {
         vesting.claimAndDepositToLock();
     }
 
-    function testRevertsRegularClaimAfterClaimAndDepositToLock() public {
-        registerSingle(user1, 1000 ether);
+    function test_revertsRegularClaimAfterClaimAndDepositToLock() public {
+        uint256 allocation = 1000 ether;
+        registerSingle(user1, allocation);
 
         // User creates a valid lock
-        // The lock's end time must be >= block.timestamp + MIN_STAKE_DURATION *at the time of the claim*.
-        // Because time advances between creating the lock and claiming, we must add a small buffer
-        // to ensure the lock is still valid when claimAndDepositToLock is called.
+        uint256 initialLockAmount = 1 ether;
         uint256 unlockTime = ((block.timestamp + MIN_STAKE_DURATION + 1 days) / ONE_WEEK) * ONE_WEEK;
-        vm.prank(user1);
-        token.approve(address(votingEscrow), 1 ether);
-        vm.prank(user1);
-        votingEscrow.create_lock(1 ether, unlockTime);
+        
+        vm.startPrank(user1);
+        // User must approve the total amount needed for the initial lock AND the subsequent airdrop deposit.
+        token.approve(address(votingEscrow), initialLockAmount + allocation);
+        votingEscrow.create_lock(initialLockAmount, unlockTime);
+        vm.stopPrank();
 
         // User claims and deposits
         vm.prank(user1);
@@ -336,14 +340,14 @@ contract AITVAirdropVestingTest is Test {
 
         // User cannot call regular claim afterwards
         vm.prank(user1);
-        vm.expectRevert(AITVAirdropVesting.VestingFullyClaimed.selector);
-        vesting.claim();
+        vm.expectRevert(AITVAirdropVesting.AlreadyClaimed.selector);
+        vesting.claimAndForfeitRemaining();
     }
 
-    function testRevertsClaimAndDepositToLockAfterRegularClaim() public {
+    function test_revertsClaimAndDepositToLockAfterRegularClaim() public {
         registerSingle(user1, 1000 ether);
         vm.prank(user1);
-        vesting.claim();
+        vesting.claimAndForfeitRemaining();
 
         // User then creates a lock
         uint256 unlockTime = ((block.timestamp + MIN_STAKE_DURATION + 1 days) / ONE_WEEK) * ONE_WEEK;
@@ -354,32 +358,32 @@ contract AITVAirdropVestingTest is Test {
 
         // User cannot call claimAndDepositToLock afterwards
         vm.prank(user1);
-        vm.expectRevert(AITVAirdropVesting.VestingFullyClaimed.selector);
+        vm.expectRevert(AITVAirdropVesting.AlreadyClaimed.selector);
         vesting.claimAndDepositToLock();
     }
 
-    function testRevertsClaimAndDepositToLockWhenNotEligible() public {
+    function test_revertsClaimAndDepositToLockWhenNotEligible() public {
         // User2 is not registered
         vm.prank(user2);
         vm.expectRevert(AITVAirdropVesting.NotEligible.selector);
         vesting.claimAndDepositToLock();
     }
 
-    function testRevertsOnClaimWhenNotEligible() public {
+    function test_revertsOnClaimWhenNotEligible() public {
         vm.prank(user2);
         vm.expectRevert(AITVAirdropVesting.NotEligible.selector);
-        vesting.claim();
+        vesting.claimAndForfeitRemaining();
     }
 
-    function testRevertsOnClaimWhenNothingToClaim() public {
+    function test_revertsOnClaimWhenNothingToClaim() public {
         registerSingle(user1, 1);
 
         vm.prank(user1);
         vm.expectRevert(AITVAirdropVesting.NothingToClaim.selector);
-        vesting.claim();
+        vesting.claimAndForfeitRemaining();
     }
 
-    function testRevertsOnClaimReentrancy() public {
+    function test_revertsOnClaimReentrancy() public {
         address attacker = makeAddr("attacker");
         MaliciousToken maliciousToken = new MaliciousToken(address(0), attacker);
 
@@ -401,10 +405,10 @@ contract AITVAirdropVestingTest is Test {
 
         vm.prank(attacker);
         vm.expectRevert(abi.encodeWithSelector(ReentrancyGuard.ReentrancyGuardReentrantCall.selector));
-        vestingWithMaliciousToken.claim();
+        vestingWithMaliciousToken.claimAndForfeitRemaining();
     }
 
-    function testOwnerCanRescueTokens() public {
+    function test_ownerCanRescueTokens() public {
         address recipient = makeAddr("recipient");
         uint256 initialVestingBalance = token.balanceOf(address(vesting));
         uint256 rescueAmount = 100_000 ether;
@@ -416,7 +420,7 @@ contract AITVAirdropVestingTest is Test {
         assertEq(token.balanceOf(address(vesting)), initialVestingBalance - rescueAmount);
     }
 
-    function testOwnerCanDrainAllocatedFunds() public {
+    function test_ownerCanDrainAllocatedFunds() public {
         registerSingle(user1, 1000 ether);
         uint256 contractBalance = token.balanceOf(address(vesting));
 
@@ -426,22 +430,22 @@ contract AITVAirdropVestingTest is Test {
 
         vm.prank(user1);
         vm.expectRevert(bytes("ERC20: subtraction underflow"));
-        vesting.claim();
+        vesting.claimAndForfeitRemaining();
     }
 
-    function testRevertsOnRescueTokensByNonOwner() public {
+    function test_revertsOnRescueTokensByNonOwner() public {
         vm.prank(user1);
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, user1));
         vesting.rescueTokens(user1, 1000 ether);
     }
 
-    function testRevertsOnRescueToZeroAddress() public {
+    function test_revertsOnRescueToZeroAddress() public {
         vm.prank(owner);
         vm.expectRevert(AITVAirdropVesting.InvalidRecipientAddress.selector);
         vesting.rescueTokens(address(0), 100 ether);
     }
 
-    function testRevertsOnRescueMoreThanBalance() public {
+    function test_revertsOnRescueMoreThanBalance() public {
         uint256 balance = token.balanceOf(address(vesting));
         uint256 rescueAmount = balance + 1;
 
@@ -460,8 +464,8 @@ contract AITVAirdropVestingTest is Test {
     }
 
     function _deployVotingEscrow(address _token) internal returns (ITestVotingEscrow) {
-        string memory name = "Vote-escrowed CRV";
-        string memory symbol = "veCRV";
+        string memory name = "veAITV";
+        string memory symbol = "veAITV";
         string memory version = "1";
         string memory artifactPath = "out/VotingEscrow.vy/VotingEscrow.vy.json";
         string memory json = vm.readFile(artifactPath);

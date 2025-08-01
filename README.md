@@ -76,3 +76,53 @@ To generate production allocations, run the following command:
 yarn prod
 ```
 This will generate the production allocations in the `./allocations/prod` directory.
+
+# Airdrop and Vesting System
+
+The AITV ecosystem includes a flexible vesting and airdrop system to manage token distributions. This system is designed to reward both short-term participants and long-term supporters who wish to engage in governance. It is primarily composed of two smart contracts: `AITVAirdropVesting.sol` and `VotingEscrow.vy`.
+
+***Note**: The `AITVAirdropVesting` contract described below is designed for specific airdrop campaigns with a 90-day vesting schedule.
+
+## `AITVAirdropVesting.sol`
+
+This contract manages the vesting schedule for specific airdrop beneficiaries. The project owner registers a list of eligible addresses and their token allocations. Once registered, a beneficiary has a one-time choice between two methods for claiming their tokens.
+
+### Vesting Schedule
+
+*   **Immediate Unlock**: **5%** of the total allocation is unlocked instantly upon registration.
+*   **Linear Vesting**: The remaining **95%** vests linearly over **90 days**.
+
+### User Actions (One-Time Choice)
+
+A beneficiary can only execute **one** of the following functions. Once a choice is made, their airdrop is considered fully claimed.
+
+#### 1. Standard Claim: `claimAndForfeitRemaining()`
+
+This is the standard option to claim vested tokens.
+
+*   **Functionality**: Calculates the total vested amount (initial 5% + linearly vested portion) and transfers it to the user.
+*   **Forfeiture Clause**: Any tokens that have not yet vested at the moment of the claim are **permanently forfeited** and sent to the treasury. To receive the full 100%, a user must wait for the full 90-day vesting period to complete before calling this function.
+*   **Use Case**: Ideal for users who want liquid tokens without a long-term commitment.
+
+#### 2. Stake for Full Allocation: `claimAndDepositToLock()`
+
+This option allows a user to bypass the vesting schedule by staking their **entire 100% allocation** into the governance system.
+
+*   **Prerequisites**:
+    1.  The user must already have an active lock in the `VotingEscrow` contract.
+    2.  The existing lock's end date must be at least **90 days** in the future.
+    3.  The user must have pre-approved the `VotingEscrow` contract to spend their AITV tokens. This requires a separate ERC20 `approve` transaction.
+*   **Functionality**: The contract validates the user's lock, transfers the full 100% allocation to them, and immediately calls the `VotingEscrow` contract to deposit those tokens into the user's existing lock, boosting their voting power.
+*   **Use Case**: Perfect for long-term supporters who want to maximize their governance influence immediately.
+
+## `VotingEscrow.vy`
+
+This is a vote-escrow contract based on the widely-used Curve DAO model.
+
+### Core Function
+
+Users lock their `AITV` tokens for a chosen duration to receive `veAITV` (vote-escrowed AITV). `veAITV` is non-transferable and represents a user's voting power in the DAO. The longer the lock, the more voting power is granted per `AITV` token.
+
+### Interaction with the Airdrop Contract
+
+The `VotingEscrow` contract works with the `AITVAirdropVesting` contract to enable the "Stake for Full Allocation" feature. `AITVAirdropVesting` checks a user's lock status (`locked`) in `VotingEscrow` and then uses the `deposit_for` function to add the airdropped tokens to the user's stake.

@@ -26,11 +26,12 @@ contract AITVAirdropVesting is Ownable, ReentrancyGuard {
     error ZeroAllocationAmount();
     error BeneficiaryAlreadyRegistered();
     error NotEligible();
-    error VestingFullyClaimed();
+    error AlreadyClaimed();
     error NothingToClaim();
     error InvalidUnlockTime();
     error LockDurationTooShort();
     error NoActiveLock();
+    error MissingBeneficiary();
 
     /// @notice The ERC20 token being vested.
     IERC20 public immutable token;
@@ -82,10 +83,10 @@ contract AITVAirdropVesting is Ownable, ReentrancyGuard {
 
     /// @notice Allows a beneficiary to claim their currently vested tokens.
     /// @dev Calculates the claimable amount based on a linear vesting schedule. Any unvested tokens are forfeited to the treasury. This can only be called once.
-    function claim() external nonReentrant {
+    function claimAndForfeitRemaining() external nonReentrant {
         Beneficiary storage b = beneficiaries[msg.sender];
         if (b.allocation == 0) revert NotEligible();
-        if (b.claimedAmount > 0) revert VestingFullyClaimed();
+        if (b.claimedAmount > 0) revert AlreadyClaimed();
 
         uint256 elapsed = block.timestamp - b.startTime;
         uint256 allocation = b.allocation;
@@ -119,7 +120,7 @@ contract AITVAirdropVesting is Ownable, ReentrancyGuard {
 
         Beneficiary storage b = beneficiaries[msg.sender];
         if (b.allocation == 0) revert NotEligible();
-        if (b.claimedAmount > 0) revert VestingFullyClaimed();
+        if (b.claimedAmount > 0) revert AlreadyClaimed();
 
         (, uint256 lockedEnd) = votingEscrow.locked(msg.sender);
 
@@ -147,6 +148,8 @@ contract AITVAirdropVesting is Ownable, ReentrancyGuard {
     /// @param _users An array of beneficiary addresses.
     /// @param _amounts An array of token allocation amounts corresponding to each user.
     function registerBeneficiaries(address[] calldata _users, uint256[] calldata _amounts) external onlyOwner {
+        if (_users.length == 0 || _amounts.length == 0) revert MissingBeneficiary();
+
         if (_users.length != _amounts.length) revert InputLengthMismatch();
         uint256 length = _users.length;
         for (uint256 i = 0; i < length; ++i) {

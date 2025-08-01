@@ -75,8 +75,6 @@ contract AgentcoinTvTokenTest is Test {
 
         assertEq(result, 1);
 
-        console.logUint(token.totalSupply() / 10 ** 18);
-
         vm.stopPrank();
     }
 
