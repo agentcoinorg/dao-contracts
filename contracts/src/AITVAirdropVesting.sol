@@ -70,7 +70,7 @@ contract AITVAirdropVesting is Ownable, ReentrancyGuard {
     /// @param _token The address of the ERC20 token to be vested.
     /// @param _treasury The address of the treasury to receive forfeited tokens.
     /// @param _votingEscrow The address of the Voting Escrow contract for staking. Can be address(0) if not used.
-    constructor(address _token, address _treasury, address _votingEscrow) Ownable(msg.sender) {
+    constructor(address _owner, address _token, address _treasury, address _votingEscrow) Ownable(_owner) {
         if (_token == address(0)) revert InvalidTokenAddress();
         if (_treasury == address(0)) revert InvalidTreasuryAddress();
         token = IERC20(_token);

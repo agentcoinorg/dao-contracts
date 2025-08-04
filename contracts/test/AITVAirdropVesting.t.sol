@@ -77,7 +77,7 @@ contract AITVAirdropVestingTest is Test {
         smartWalletChecker.addToWhitelist(user1);
         smartWalletChecker.addToWhitelist(user2);
         
-        vesting = new AITVAirdropVesting(address(token), treasury, address(votingEscrow));
+        vesting = new AITVAirdropVesting(owner, address(token), treasury, address(votingEscrow));
 
         vm.stopPrank();
 
@@ -89,18 +89,18 @@ contract AITVAirdropVestingTest is Test {
     function test_revertsOnDeployWithZeroAddressToken() public {
         vm.prank(owner);
         vm.expectRevert(AITVAirdropVesting.InvalidTokenAddress.selector);
-        new AITVAirdropVesting(address(0), treasury, address(votingEscrow));
+        new AITVAirdropVesting(owner, address(0), treasury, address(votingEscrow));
     }
 
     function test_revertsOnDeployWithZeroAddressTreasury() public {
         vm.prank(owner);
         vm.expectRevert(AITVAirdropVesting.InvalidTreasuryAddress.selector);
-        new AITVAirdropVesting(address(token), address(0), address(votingEscrow));
+        new AITVAirdropVesting(owner, address(token), address(0), address(votingEscrow));
     }
 
     function test_doesNotRevertOnDeployWithZeroAddressVotingEscrow() public {
         vm.prank(owner);
-        new AITVAirdropVesting(address(token), treasury, address(0));
+        new AITVAirdropVesting(owner, address(token), treasury, address(0));
     }
 
     function test_registerBatch() public {
@@ -389,7 +389,7 @@ contract AITVAirdropVestingTest is Test {
 
         vm.prank(owner);
         AITVAirdropVesting vestingWithMaliciousToken =
-            new AITVAirdropVesting(address(maliciousToken), treasury, address(votingEscrow));
+            new AITVAirdropVesting(owner, address(maliciousToken), treasury, address(votingEscrow));
 
         maliciousToken.setTarget(address(vestingWithMaliciousToken));
 
@@ -467,7 +467,7 @@ contract AITVAirdropVestingTest is Test {
         string memory name = "veAITV";
         string memory symbol = "veAITV";
         string memory version = "1";
-        string memory artifactPath = "out/VotingEscrow.vy/VotingEscrow.vy.json";
+        string memory artifactPath = "vyper-out/VotingEscrow.vy/VotingEscrow.vy.json";
         string memory json = vm.readFile(artifactPath);
 
         string memory bytecodePath = "['lib/curve-dao-contracts/contracts/VotingEscrow.vy'].bytecode";
