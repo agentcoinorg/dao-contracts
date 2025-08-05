@@ -118,6 +118,8 @@ This option allows a user to bypass the vesting schedule by staking their **enti
 ## `VotingEscrow.vy`
 
 This is a vote-escrow contract based on the widely-used Curve DAO model.
+To build the contract, run `./build-vyper.sh` in the `contracts` directory. This will compile the Vyper contract and generate the necessary artifacts.
+Building the contract requires Vyper and Python 3.8 to be installed.
 
 ### Core Function
 
