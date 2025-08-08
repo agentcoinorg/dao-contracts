@@ -10,7 +10,7 @@ contract DeployAITVAirdropVesting is Script {
     function setUp() public {}
 
     function run() public {
-        address ownerAddr = vm.envAddress("TEST_OWNER");
+        address ownerAddr = vm.envAddress("OWNER");
         address aitvTokenAddr = vm.envAddress("AITV_TOKEN_ADDRESS");
         address votingEscrowAddr = vm.envAddress("VOTING_ESCROW_ADDRESS");
         address treasuryAddr = vm.envAddress("TREASURY_ADDRESS");
