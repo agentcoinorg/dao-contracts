@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
-import {AITVAirdropVesting} from "../src/AITVAirdropVesting.sol";
+import {AITVAirdropVesting, ClaimType} from "../src/AITVAirdropVesting.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {MockedERC20} from "./mocks/MockedERC20.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
@@ -117,13 +117,18 @@ contract AITVAirdropVestingTest is Test {
         vm.prank(owner);
         vesting.registerBeneficiaries(users, amounts);
 
-        (uint256 alloc1, uint256 startTime1, ) = vesting.beneficiaries(user1);
+        (uint256 alloc1, uint256 startTime1, ,) = vesting.beneficiaries(user1);
         assertEq(alloc1, 1000 ether, "User1 allocation mismatch");
         assertEq(startTime1, expectedStartTime, "User1 start time mismatch");
 
-        (uint256 alloc2, uint256 startTime2, ) = vesting.beneficiaries(user2);
+        (uint256 alloc2, uint256 startTime2, ,) = vesting.beneficiaries(user2);
         assertEq(alloc2, 2000 ether, "User2 allocation mismatch");
         assertEq(startTime2, expectedStartTime, "User2 start time mismatch");
+
+        (,,, ClaimType claimType) = vesting.beneficiaries(user1);
+        assertEq(uint256(claimType), uint256(ClaimType.Unclaimed), "User3 claim type mismatch");
+        (,,, claimType) = vesting.beneficiaries(user2);
+        assertEq(uint256(claimType), uint256(ClaimType.Unclaimed), "User4 claim type mismatch");
     }
 
     function test_registerWithEmptyArrays() public {
@@ -207,9 +212,10 @@ contract AITVAirdropVestingTest is Test {
         assertEq(token.balanceOf(user1), initialUserBalance + expectedClaim, "User1 balance mismatch");
         assertEq(token.balanceOf(treasury), initialTreasuryBalance + expectedForfeit, "Treasury balance mismatch");
 
-        (uint256 alloc, , uint256 claimed) = vesting.beneficiaries(user1);
+        (uint256 alloc, , uint256 claimed, ClaimType claimType) = vesting.beneficiaries(user1);
         assertEq(alloc, 1000 ether, "Allocation should not change");
         assertEq(claimed, expectedClaim, "Claimed amount mismatch in struct");
+        assertEq(uint256(claimType), uint256(ClaimType.ClaimAndForfeit), "Claim type should be ClaimAndForfeit");
     }
 
     function test_claimPartwayThroughVesting() public {
@@ -227,6 +233,11 @@ contract AITVAirdropVestingTest is Test {
             + (halfDuration * (vesting.MAX_BASIS_POINTS() - vesting.IMMEDIATE_UNLOCK_BASIS_POINTS())) / vesting.VESTING_DURATION();
         uint256 expectedClaim = (1000 ether * unlockedPercent) / vesting.MAX_BASIS_POINTS();
         uint256 expectedForfeit = 1000 ether - expectedClaim;
+
+        (uint256 alloc, , uint256 claimed, ClaimType claimType) = vesting.beneficiaries(user1);
+        assertEq(alloc, 1000 ether, "Allocation should not change");
+        assertEq(claimed, expectedClaim, "Claimed amount mismatch in struct");
+        assertEq(uint256(claimType), uint256(ClaimType.ClaimAndForfeit), "Claim type should be ClaimAndForfeit");
 
         assertEq(expectedClaim, 525 ether, "Calculation sanity check failed");
         assertEq(token.balanceOf(user1), initialUserBalance + expectedClaim, "User1 balance mismatch");
@@ -246,8 +257,9 @@ contract AITVAirdropVestingTest is Test {
         assertEq(token.balanceOf(user2), initialUserBalance + 1000 ether, "User2 should receive full allocation");
         assertEq(token.balanceOf(treasury), initialTreasuryBalance, "Treasury should receive nothing");
 
-        (, , uint256 claimed) = vesting.beneficiaries(user2);
+        (, , uint256 claimed, ClaimType claimType) = vesting.beneficiaries(user2);
         assertEq(claimed, 1000 ether, "Claimed amount mismatch in struct");
+        assertEq(uint256(claimType), uint256(ClaimType.ClaimAndForfeit), "Claim type should be ClaimAndForfeit");
     }
 
     function test_revertsOnSecondClaim() public {
@@ -290,8 +302,10 @@ contract AITVAirdropVestingTest is Test {
         assertEq(uint256(int256(finalAmount)), initialUserLockAmount + allocation, "VE lock amount is incorrect");
         assertEq(finalEnd, unlockTime, "VE lock end time is incorrect");
 
-        (, , uint256 claimed) = vesting.beneficiaries(user1);
+        (, , uint256 claimed, ClaimType claimType) = vesting.beneficiaries(user1);
         assertEq(claimed, allocation, "Claimed amount in struct should be full allocation");
+
+        assertEq(uint256(claimType), uint256(ClaimType.ClaimAndDepositToLock), "Claim type should be ClaimAndDepositToLock");
     }
 
     function test_revertsClaimAndDepositToLockWhenLockIsTooShort() public {

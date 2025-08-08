@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 interface IVotingEscrow {
@@ -11,10 +12,19 @@ interface IVotingEscrow {
     function locked(address _addr) external view returns (int128 amount, uint256 end);
 }
 
+enum ClaimType {
+    /// @notice Claim type for unclaimed tokens.
+    Unclaimed,
+    /// @notice Claim type for claiming and forfeiting remaining tokens.
+    ClaimAndForfeit,
+    /// @notice Claim type for claiming and depositing into a Voting Escrow lock.
+    ClaimAndDepositToLock
+}
+
 /// @title AITVAirdropVesting
 /// @notice Manages the vesting of airdropped tokens for beneficiaries. Users can either claim tokens over time or deposit their entire allocation into a voting escrow lock.
 /// @dev Implements a linear vesting schedule with an initial immediate unlock. It integrates with a VotingEscrow contract to allow staking of the full airdrop amount, bypassing the normal vesting schedule if the lock duration is sufficient.
-contract AITVAirdropVesting is Ownable, ReentrancyGuard {
+contract AITVAirdropVesting is Ownable2Step, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     error InvalidTokenAddress();
@@ -57,6 +67,8 @@ contract AITVAirdropVesting is Ownable, ReentrancyGuard {
         uint256 startTime;
         /// @param claimedAmount The amount of tokens already claimed by the beneficiary.
         uint256 claimedAmount;
+        /// @param claimType The type of claim the beneficiary chose.
+        ClaimType claimType;
     }
 
     /// @notice Mapping from a beneficiary's address to their vesting details.
@@ -105,6 +117,7 @@ contract AITVAirdropVesting is Ownable, ReentrancyGuard {
         uint256 forfeitedAmount = allocation - claimableAmount;
 
         b.claimedAmount = claimableAmount;
+        b.claimType = ClaimType.ClaimAndForfeit;
         emit Claimed(msg.sender, claimableAmount, forfeitedAmount);
 
         token.safeTransfer(msg.sender, claimableAmount);
@@ -130,6 +143,7 @@ contract AITVAirdropVesting is Ownable, ReentrancyGuard {
 
         uint256 allocation = b.allocation;
         b.claimedAmount = allocation;
+        b.claimType = ClaimType.ClaimAndDepositToLock;
 
         // The VotingEscrow contract's deposit_for function pulls funds from the user's balance
         // Therefore, this contract must first transfer the tokens to the user (msg.sender)
@@ -178,9 +192,33 @@ contract AITVAirdropVesting is Ownable, ReentrancyGuard {
         beneficiaries[_user] = Beneficiary({
             allocation: _amount, 
             startTime: block.timestamp, 
-            claimedAmount: 0
+            claimedAmount: 0,
+            claimType: ClaimType.Unclaimed
         });
 
         emit Registered(_user, _amount, block.timestamp);
+    }
+
+    function _verifyValidContractArgs(address _token, address _votingEscrow) internal view {
+        uint256 tokenCodeSize;
+        assembly {
+            tokenCodeSize := extcodesize(_token)
+        }
+        require(tokenCodeSize > 0, "token is not a contract");
+
+        uint256 votingEscrowCodeSize;
+        assembly {
+            votingEscrowCodeSize := extcodesize(_votingEscrow)
+        }
+        require(votingEscrowCodeSize > 0, "VotingEscrow is not a contract");
+
+        try IERC20(_token).totalSupply() returns (uint256) {
+        } catch {
+            revert InvalidTokenAddress();
+        }
+        try IVotingEscrow(_votingEscrow).locked(address(this)) returns (int128, uint256) {
+        } catch {
+            revert NoVotingEscrowConfigured();
+        }
     }
 }
